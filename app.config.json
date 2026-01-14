@@ -1,0 +1,12 @@
+{
+    "appName": "LODDGO",
+    "mvp": true,
+    "targetMarket": "Norway",
+    "participantsRequireAccount": false,
+    "userIdentifier": "phone_number_reference",
+    "payments": {
+      "enabled": false,
+      "provider": "vipps"
+    }
+  }
+  
