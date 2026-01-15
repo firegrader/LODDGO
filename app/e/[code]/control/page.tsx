@@ -269,9 +269,6 @@ export default function ControlPanel() {
       )}
 
       <div style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
-        <a href={`/e/${stats.event.code}`} style={{ padding: '10px 20px', background: '#64748b', color: 'white', textDecoration: 'none', borderRadius: '4px', display: 'inline-block' }}>
-          View Event Page
-        </a>
         <a href="/" style={{ padding: '10px 20px', color: '#64748b', textDecoration: 'none' }}>
           ← Back to home
         </a>

@@ -111,11 +111,7 @@ export default function OrderPage() {
     <main>
       <h1>You are in! Good luck!</h1>
 
-      <p style={{ marginTop: '10px', fontSize: '1.1em' }}>
-        You have <strong>{totalTickets}</strong> tickets
-      </p>
-
-      <h2>Your Tickets</h2>
+      <h2>You have {totalTickets} ticket{totalTickets === 1 ? '' : 's'}</h2>
       <ul className="ticket-list">
         {tickets.map((ticket) => {
           const isWinner = draws.some(
@@ -139,10 +135,6 @@ export default function OrderPage() {
           );
         })}
       </ul>
-
-      <p style={{ marginTop: '10px' }}>
-        <a href={`/order/${order.id}/purchases`}>Your purchases →</a>
-      </p>
 
       {event && (
         <div style={{ marginTop: '30px', padding: '16px', background: '#f9fafb', borderRadius: '8px' }}>
@@ -212,6 +204,10 @@ export default function OrderPage() {
           </form>
         </div>
       )}
+
+      <p style={{ marginTop: '10px' }}>
+        <a href={`/order/${order.id}/purchases`}>Your purchases →</a>
+      </p>
 
       {event && (
         <p>
