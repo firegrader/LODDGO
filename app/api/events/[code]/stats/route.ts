@@ -98,6 +98,20 @@ export async function GET(
       created_at: order.created_at,
     })) || [];
 
+    // Get winner names for draws
+    const drawOrderIds = draws?.map((d) => d.winning_order_id) || [];
+    let orderNameMap = new Map<string, string | null>();
+    if (drawOrderIds.length > 0) {
+      const { data: drawOrders } = await supabaseServer
+        .from('orders')
+        .select('id, buyer_display_name')
+        .in('id', drawOrderIds);
+
+      orderNameMap = new Map(
+        (drawOrders || []).map((o) => [o.id, o.buyer_display_name])
+      );
+    }
+
     const responseData = {
       event: {
         code: event.code,
@@ -114,7 +128,10 @@ export async function GET(
         remaining_tickets: remainingTickets,
       },
       recent_orders: recentOrders,
-      draws: draws || [],
+      draws: (draws || []).map((draw) => ({
+        ...draw,
+        winner_name: orderNameMap.get(draw.winning_order_id) || 'Anonymous',
+      })),
     };
 
     console.log('Stats response:', JSON.stringify(responseData, null, 2));

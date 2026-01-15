@@ -36,6 +36,7 @@ interface EventStats {
     winning_order_id: string;
     method: string;
     drawn_at: string;
+    winner_name: string;
   }>;
 }
 
@@ -46,7 +47,6 @@ export default function ControlPanel() {
   const [stats, setStats] = useState<EventStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [drawError, setDrawError] = useState<string | null>(null);
   const [drawing, setDrawing] = useState(false);
@@ -101,16 +101,12 @@ export default function ControlPanel() {
   useEffect(() => {
     fetchStats();
 
-    // Auto-refresh every 3 seconds if enabled
-    let interval: NodeJS.Timeout;
-    if (autoRefresh) {
-      interval = setInterval(fetchStats, 3000);
-    }
+    const interval = setInterval(fetchStats, 3000);
 
     return () => {
-      if (interval) clearInterval(interval);
+      clearInterval(interval);
     };
-  }, [code, autoRefresh]);
+  }, [code]);
 
   if (loading && !stats) {
     return (
@@ -136,28 +132,21 @@ export default function ControlPanel() {
 
   return (
     <main>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <h1>Event Control Panel</h1>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <input
-              type="checkbox"
-              checked={autoRefresh}
-              onChange={(e) => setAutoRefresh(e.target.checked)}
-            />
-            <span>Auto-refresh (3s)</span>
-          </label>
-          {lastRefresh && (
-            <small style={{ color: '#64748b', fontSize: '0.85em' }}>
-              Last updated: {lastRefresh.toLocaleTimeString()}
-            </small>
-          )}
-        </div>
       </div>
 
       <h2>{stats.event.title}</h2>
       <p>Event Code: <span className="code">{stats.event.code}</span></p>
-      <p>Status: <strong>{stats.event.status}</strong></p>
+      <p>Event link: <span className="code">/e/{stats.event.code}</span></p>
+      <p>
+        Status: <strong>{stats.event.status}</strong>
+        {lastRefresh && (
+          <span style={{ color: '#64748b', fontSize: '0.85em', marginLeft: '10px' }}>
+            (Last updated: {lastRefresh.toLocaleTimeString()})
+          </span>
+        )}
+      </p>
       <p>Price per ticket: <strong>{stats.event.price_nok} NOK</strong></p>
 
       <div style={{ 
@@ -267,6 +256,9 @@ export default function ControlPanel() {
                 <div style={{ color: '#64748b', fontSize: '0.9em', marginTop: '5px' }}>
                   Method: {draw.method}
                 </div>
+                <div style={{ color: '#64748b', fontSize: '0.9em', marginTop: '5px' }}>
+                  Winner: {draw.winner_name || 'Anonymous'}
+                </div>
               </div>
               <div style={{ color: '#64748b', fontSize: '0.9em' }}>
                 {formatDateTime(draw.drawn_at)}
@@ -276,17 +268,7 @@ export default function ControlPanel() {
         </div>
       )}
 
-      <div style={{ marginTop: '30px', padding: '15px', background: '#f9fafb', borderRadius: '4px' }}>
-        <h3>Share Event</h3>
-        <p>Share this link with participants:</p>
-        <p><span className="code">/e/{stats.event.code}</span></p>
-        <p><a href={`/e/${stats.event.code}`} target="_blank">Open event page →</a></p>
-      </div>
-
       <div style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
-        <button onClick={fetchStats} style={{ padding: '10px 20px' }}>
-          Refresh Now
-        </button>
         <a href={`/e/${stats.event.code}`} style={{ padding: '10px 20px', background: '#64748b', color: 'white', textDecoration: 'none', borderRadius: '4px', display: 'inline-block' }}>
           View Event Page
         </a>
