@@ -81,9 +81,9 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         );
       }
-      if (error.message.includes('already exists') || error.message.includes('Draw already')) {
+      if (error.message.includes('already been drawn')) {
         return NextResponse.json(
-          { error: 'Draw already exists for this event' },
+          { error: 'This ticket has already been drawn' },
           { status: 409 }
         );
       }

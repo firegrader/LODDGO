@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS tickets (
     UNIQUE(event_id, ticket_number)
 );
 
--- Draws table: stores draw results (one draw per event)
+-- Draws table: stores draw results (multiple draws per event)
 CREATE TABLE IF NOT EXISTS draws (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
@@ -44,8 +44,8 @@ CREATE TABLE IF NOT EXISTS draws (
     winning_order_id UUID NOT NULL REFERENCES orders(id) ON DELETE RESTRICT, -- Reference to winning order
     method TEXT NOT NULL DEFAULT 'manual', -- Draw method (manual|random for future)
     drawn_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    -- Ensure only one draw per event
-    UNIQUE(event_id)
+    -- Ensure no duplicate ticket is drawn for the same event
+    UNIQUE(event_id, winning_ticket_number)
 );
 
 -- Indexes for performance
@@ -57,4 +57,5 @@ CREATE INDEX IF NOT EXISTS idx_tickets_event_id ON tickets(event_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_order_id ON tickets(order_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_event_number ON tickets(event_id, ticket_number);
 CREATE INDEX IF NOT EXISTS idx_draws_event_id ON draws(event_id);
+CREATE INDEX IF NOT EXISTS idx_draws_event_ticket_number ON draws(event_id, winning_ticket_number);
 CREATE INDEX IF NOT EXISTS idx_draws_winning_order_id ON draws(winning_order_id);

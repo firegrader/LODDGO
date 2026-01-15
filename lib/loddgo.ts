@@ -260,16 +260,10 @@ export async function drawWinner(data: {
 
   if (drawError) {
     if (drawError.code === '23505') {
-      throw new Error('Draw already exists for this event');
+      throw new Error('This ticket has already been drawn');
     }
     throw new Error(`Failed to create draw: ${drawError.message}`);
   }
-
-  // Update event status to 'drawn'
-  await supabaseServer
-    .from('events')
-    .update({ status: 'drawn' })
-    .eq('id', data.event_id);
 
   return draw;
 }

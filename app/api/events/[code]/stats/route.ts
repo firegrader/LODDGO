@@ -7,6 +7,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { getEventByCode } from '@/lib/loddgo';
 
+// Force dynamic rendering - no caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { code: string } }
@@ -34,7 +38,7 @@ export async function GET(
     // Get orders count and total revenue
     const { data: orders, error: ordersError } = await supabaseServer
       .from('orders')
-      .select('id, qty, amount_nok, buyer_display_name, created_at')
+      .select('*')
       .eq('event_id', event.id)
       .order('created_at', { ascending: false });
 
@@ -44,6 +48,10 @@ export async function GET(
     }
 
     console.log(`Found ${orders?.length || 0} orders for event ${event.id}`);
+    if (orders && orders.length > 0) {
+      console.log('Order IDs:', orders.map(o => o.id));
+      console.log('Order details:', JSON.stringify(orders, null, 2));
+    }
 
     // Get tickets count
     const { data: tickets, error: ticketsError } = await supabaseServer
@@ -57,10 +65,27 @@ export async function GET(
     }
 
     console.log(`Found ${tickets?.length || 0} tickets for event ${event.id}`);
+    if (tickets && tickets.length > 0) {
+      console.log('Ticket numbers:', tickets.map(t => t.id).slice(0, 10));
+    }
+
+    // Get draws
+    const { data: draws, error: drawsError } = await supabaseServer
+      .from('draws')
+      .select('id, winning_ticket_number, winning_order_id, method, drawn_at')
+      .eq('event_id', event.id)
+      .order('drawn_at', { ascending: false });
+
+    if (drawsError) {
+      console.error('Error fetching draws:', drawsError);
+      throw drawsError;
+    }
 
     // Calculate statistics
     const totalOrders = orders?.length || 0;
     const totalTickets = tickets?.length || 0;
+    const totalDraws = draws?.length || 0;
+    const remainingTickets = Math.max(totalTickets - totalDraws, 0);
     const totalRevenue = orders?.reduce((sum, order) => sum + order.amount_nok, 0) || 0;
     const uniqueBuyers = new Set(orders?.map(o => o.buyer_display_name).filter(Boolean)).size;
 
@@ -85,8 +110,11 @@ export async function GET(
         total_tickets: totalTickets,
         total_revenue: totalRevenue,
         unique_buyers: uniqueBuyers,
+        total_draws: totalDraws,
+        remaining_tickets: remainingTickets,
       },
       recent_orders: recentOrders,
+      draws: draws || [],
     };
 
     console.log('Stats response:', JSON.stringify(responseData, null, 2));

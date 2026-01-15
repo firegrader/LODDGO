@@ -31,43 +31,62 @@ export async function GET(
       );
     }
 
-    // Get draw result
-    const { data: draw, error: drawError } = await supabaseServer
+    // Get draw results (all draws for event)
+    const { data: draws, error: drawsError } = await supabaseServer
       .from('draws')
-      .select('*')
+      .select('id, winning_ticket_number, winning_order_id, method, drawn_at')
       .eq('event_id', event.id)
-      .single();
+      .order('drawn_at', { ascending: false });
 
-    if (drawError) {
-      if (drawError.code === 'PGRST116') {
+    if (drawsError) {
+      if (drawsError.code === 'PGRST116') {
         // No draw exists yet
         return NextResponse.json(
           { error: 'Draw not found for this event' },
           { status: 404 }
         );
       }
-      throw drawError;
+      throw drawsError;
     }
 
-    // Get winning order details
-    const { data: order } = await supabaseServer
+    if (!draws || draws.length === 0) {
+      return NextResponse.json(
+        { error: 'Draw not found for this event' },
+        { status: 404 }
+      );
+    }
+
+    // Get winning order details for all draws
+    const orderIds = draws.map((d) => d.winning_order_id);
+    const { data: orders } = await supabaseServer
       .from('orders')
       .select('id, buyer_display_name, qty, created_at')
-      .eq('id', draw.winning_order_id)
-      .single();
+      .in('id', orderIds);
 
-    return NextResponse.json({
-      draw: {
+    const ordersById = new Map(
+      (orders || []).map((order) => [order.id, order])
+    );
+
+    const drawResults = draws.map((draw) => {
+      const order = ordersById.get(draw.winning_order_id);
+      return {
+        id: draw.id,
         winning_ticket_number: draw.winning_ticket_number,
         method: draw.method,
         drawn_at: draw.drawn_at,
-      },
-      winner: order ? {
-        buyer_display_name: order.buyer_display_name,
-        order_id: order.id,
-        tickets_purchased: order.qty,
-        order_date: order.created_at,
-      } : null,
+        winner: order
+          ? {
+              buyer_display_name: order.buyer_display_name,
+              order_id: order.id,
+              tickets_purchased: order.qty,
+              order_date: order.created_at,
+            }
+          : null,
+      };
+    });
+
+    return NextResponse.json({
+      draws: drawResults,
       event: {
         code: event.code,
         title: event.title,
