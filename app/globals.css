@@ -105,6 +105,94 @@ button:disabled {
   border-radius: 4px;
 }
 
+.ticket {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #ffffff;
+  border: 2px dashed #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.ticket::before,
+.ticket::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #f5f5f5;
+  border: 2px solid #e5e7eb;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ticket::before {
+  left: -9px;
+}
+
+.ticket::after {
+  right: -9px;
+}
+
+.ticket-winner {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
+.ticket-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ticket-label {
+  font-size: 0.8em;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 1px;
+}
+
+.ticket-number {
+  font-size: 1.6em;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.ticket-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ticket-meta {
+  font-size: 0.85em;
+  color: #64748b;
+}
+
+.ticket-status {
+  font-size: 0.85em;
+  color: #0f172a;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: #e2e8f0;
+  display: inline-block;
+}
+
+.ticket-badge {
+  font-size: 0.85em;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #16a34a;
+  display: inline-block;
+  font-weight: 600;
+}
+
 .code {
   font-family: monospace;
   background: #f3f4f6;

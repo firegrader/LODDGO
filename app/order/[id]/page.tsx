@@ -27,6 +27,11 @@ interface Ticket {
 interface Event {
   code: string;
   title: string;
+  price_nok?: number;
+}
+
+interface Draw {
+  winning_ticket_number: number;
 }
 
 export default function OrderPage() {
@@ -35,29 +40,54 @@ export default function OrderPage() {
   
   const [order, setOrder] = useState<Order | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [totalTickets, setTotalTickets] = useState(0);
   const [event, setEvent] = useState<Event | null>(null);
+  const [draws, setDraws] = useState<Draw[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [autoRefresh] = useState(true);
+  const [moreQty, setMoreQty] = useState(1);
+  const [buyingMore, setBuyingMore] = useState(false);
+  const [moreError, setMoreError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/api/orders/${orderId}`)
-      .then(res => {
-        if (!res.ok) {
+    const fetchOrder = async () => {
+      try {
+        const response = await fetch(`/api/orders/${orderId}?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+          },
+        });
+        if (!response.ok) {
           throw new Error('Order not found');
         }
-        return res.json();
-      })
-      .then(data => {
+        const data = await response.json();
         setOrder(data.order);
         setTickets(data.tickets);
+        setTotalTickets(data.total_tickets || data.tickets?.length || 0);
         setEvent(data.event);
+        setDraws(data.draws || []);
         setLoading(false);
-      })
-      .catch(err => {
+        setError(null);
+      } catch (err: any) {
         setError(err.message);
         setLoading(false);
-      });
-  }, [orderId]);
+      }
+    };
+
+    fetchOrder();
+
+    let interval: NodeJS.Timeout;
+    if (autoRefresh) {
+      interval = setInterval(fetchOrder, 5000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [orderId, autoRefresh]);
 
   if (loading) {
     return (
@@ -79,29 +109,109 @@ export default function OrderPage() {
 
   return (
     <main>
-      <h1>Order Confirmed!</h1>
-      <div className="success">
-        <p><strong>Thank you for your purchase!</strong></p>
-        <p>Your tickets have been purchased successfully.</p>
-      </div>
+      <h1>You are in! Good luck!</h1>
 
-      <h2>Order Details</h2>
-      <p><strong>Order ID:</strong> <span className="code">{order.id}</span></p>
-      {order.buyer_display_name && (
-        <p><strong>Buyer:</strong> {order.buyer_display_name}</p>
-      )}
-      <p><strong>Number of Tickets:</strong> {order.qty}</p>
-      <p><strong>Total Amount:</strong> {order.amount_nok} NOK</p>
-      <p><strong>Status:</strong> {order.paid ? 'Paid' : 'Pending'}</p>
+      <p style={{ marginTop: '10px', fontSize: '1.1em' }}>
+        You have <strong>{totalTickets}</strong> tickets
+      </p>
 
       <h2>Your Tickets</h2>
       <ul className="ticket-list">
-        {tickets.map((ticket) => (
-          <li key={ticket.id}>
-            Ticket #{ticket.ticket_number}
-          </li>
-        ))}
+        {tickets.map((ticket) => {
+          const isWinner = draws.some(
+            (draw) => draw.winning_ticket_number === ticket.ticket_number
+          );
+          return (
+            <li key={ticket.id} className={`ticket ${isWinner ? 'ticket-winner' : ''}`}>
+              <div className="ticket-left">
+                <div className="ticket-label">LODDGO</div>
+                <div className="ticket-number">#{ticket.ticket_number}</div>
+              </div>
+              <div className="ticket-right">
+                <div className="ticket-meta">Raffle Ticket</div>
+                {isWinner ? (
+                  <div className="ticket-badge">WINNER</div>
+                ) : (
+                  <div className="ticket-status">Active</div>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ul>
+
+      <p style={{ marginTop: '10px' }}>
+        <a href={`/order/${order.id}/purchases`}>Your purchases →</a>
+      </p>
+
+      {event && (
+        <div style={{ marginTop: '30px', padding: '16px', background: '#f9fafb', borderRadius: '8px' }}>
+          <h2>Buy More Tickets</h2>
+          {moreError && <div className="error">{moreError}</div>}
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setBuyingMore(true);
+              setMoreError(null);
+
+              try {
+                const response = await fetch('/api/orders', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    event_code: event.code,
+                    qty: moreQty,
+                    buyer_display_name: order.buyer_display_name || null,
+                  }),
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                  throw new Error(data.error || 'Failed to buy more tickets');
+                }
+
+                // Go to the new order confirmation page
+                window.location.href = `/order/${data.order.id}`;
+              } catch (err: any) {
+                setMoreError(err.message || 'Failed to buy more tickets');
+                setBuyingMore(false);
+              }
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setMoreQty((q) => Math.max(1, q - 1))}
+                aria-label="Decrease quantity"
+                style={{ width: '36px', height: '36px' }}
+              >
+                -
+              </button>
+              <input
+                type="number"
+                min="1"
+                value={moreQty}
+                onChange={(e) => setMoreQty(Math.max(1, Number(e.target.value) || 1))}
+                style={{ width: '60px', textAlign: 'center', height: '36px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setMoreQty((q) => q + 1)}
+                aria-label="Increase quantity"
+                style={{ width: '36px', height: '36px' }}
+              >
+                +
+              </button>
+              <div style={{ marginLeft: 'auto', marginRight: '10px' }}>
+                Total: <strong>{(event.price_nok ?? 0) * moreQty} NOK</strong>
+              </div>
+              <button type="submit" disabled={buyingMore} style={{ width: '90px', height: '36px' }}>
+                {buyingMore ? '...' : 'Buy'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {event && (
         <p>
@@ -109,9 +219,6 @@ export default function OrderPage() {
         </p>
       )}
 
-      <p style={{ marginTop: '20px' }}>
-        <a href="/">← Back to home</a>
-      </p>
     </main>
   );
 }
