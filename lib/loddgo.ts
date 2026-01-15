@@ -141,24 +141,32 @@ export async function buyTicketsTransactionally(data: {
 
   // Step 1: Get the next ticket number using concurrency-safe database function
   // This function uses advisory locks to ensure sequential ticket numbers
+  console.log('Calling get_next_ticket_number for event:', data.event_id);
+  
   const { data: nextTicketNumber, error: ticketNumError } = await supabaseServer
     .rpc('get_next_ticket_number', {
       p_event_id: data.event_id,
     })
     .single();
 
+  console.log('RPC response:', { nextTicketNumber, error: ticketNumError });
+
   if (ticketNumError) {
+    console.error('Ticket number RPC error:', ticketNumError);
     if (ticketNumError.code === '42883') {
       throw new Error(
         'Database function get_next_ticket_number not found. Please run supabase/functions.sql'
       );
     }
-    throw new Error(`Failed to get next ticket number: ${ticketNumError.message}`);
+    throw new Error(`Failed to get next ticket number: ${ticketNumError.message} (code: ${ticketNumError.code})`);
   }
 
   if (typeof nextTicketNumber !== 'number' || nextTicketNumber < 1) {
-    throw new Error('Invalid ticket number returned from database function');
+    console.error('Invalid ticket number returned:', nextTicketNumber);
+    throw new Error(`Invalid ticket number returned from database function: ${nextTicketNumber}`);
   }
+
+  console.log('Next ticket number:', nextTicketNumber);
 
   // Step 2: Create order
   const { data: order, error: orderError } = await supabaseServer
