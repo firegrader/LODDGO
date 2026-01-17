@@ -25,13 +25,19 @@ console.log('\nClean URL:', cleanUrl);
 const supabase = createClient(cleanUrl, supabaseKey);
 
 // Test connection
-supabase
-  .from('events')
-  .select('count')
-  .limit(1)
-  .then(({ data, error }) => {
+const run = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .select('count')
+      .limit(1);
+
     if (error) {
-      if (error.code === 'PGRST204' || error.message.includes('relation') || error.message.includes('does not exist')) {
+      if (
+        error.code === 'PGRST204' ||
+        error.message.includes('relation') ||
+        error.message.includes('does not exist')
+      ) {
         console.log('\n⚠️  Connection works, but database tables not set up yet.');
         console.log('   Run supabase/schema.sql in your Supabase SQL Editor.');
       } else {
@@ -42,7 +48,9 @@ supabase
       console.log('\n✅ Connection successful!');
       console.log('   Database is ready.');
     }
-  })
-  .catch((err) => {
+  } catch (err: any) {
     console.error('\n❌ Connection failed:', err.message);
-  });
+  }
+};
+
+run();
