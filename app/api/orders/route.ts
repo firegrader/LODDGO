@@ -7,11 +7,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buyTicketsTransactionally, getEventByCode } from '@/lib/loddgo';
 
 export async function POST(request: NextRequest) {
+  let event_code: string | undefined;
+  let qty: number | undefined;
+  let buyer_display_name: string | null | undefined;
+  let idempotency_key: string | null | undefined;
+
   try {
     const body = await request.json();
 
     // Validation
-    const { event_code, buyer_display_name, qty, idempotency_key } = body;
+    ({ event_code, buyer_display_name, qty, idempotency_key } = body);
 
     if (!event_code || typeof event_code !== 'string') {
       return NextResponse.json(
