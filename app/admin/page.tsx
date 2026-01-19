@@ -5,57 +5,24 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import QRCode from 'qrcode';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
     price_nok: 10,
     status: 'live' as 'draft' | 'live' | 'closed' | 'drawn',
   });
-  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
-  const [eventLink, setEventLink] = useState<string | null>(null);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const buildQr = async () => {
-      if (!generatedCode) {
-        setEventLink(null);
-        setQrDataUrl(null);
-        return;
-      }
-      const origin = window.location.origin;
-      const link = `${origin}/e/${generatedCode}`;
-      setEventLink(link);
-      try {
-        const dataUrl = await QRCode.toDataURL(link, {
-          width: 220,
-          margin: 1,
-          color: {
-            dark: '#111827',
-            light: '#ffffff',
-          },
-        });
-        setQrDataUrl(dataUrl);
-      } catch (err) {
-        console.error('Failed to generate QR code:', err);
-        setQrDataUrl(null);
-      }
-    };
-
-    buildQr();
-  }, [generatedCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setSuccess(null);
 
     try {
       const response = await fetch('/api/events', {
@@ -72,15 +39,8 @@ export default function AdminPage() {
         throw new Error(data.error || 'Failed to create event');
       }
 
-      setSuccess(`Event created successfully!`);
-      setGeneratedCode(data.code);
-      
-      // Clear form (keep price and status for convenience)
-      setFormData({
-        title: '',
-        price_nok: 10,
-        status: formData.status,
-      });
+      // Automatically redirect to Event Control Panel
+      router.push(`/e/${data.code}/control`);
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
@@ -93,7 +53,6 @@ export default function AdminPage() {
       <p>Organizer admin page for creating raffle events</p>
 
       {error && <div className="error">{error}</div>}
-      {success && <div className="success">{success}</div>}
 
       <form onSubmit={handleSubmit}>
         <label htmlFor="title">Event Title:</label>
@@ -133,41 +92,11 @@ export default function AdminPage() {
         </button>
       </form>
 
-      {generatedCode && (
-        <div style={{ marginTop: '30px', padding: '15px', background: '#dcfce7', borderRadius: '4px', border: '1px solid #16a34a' }}>
-          <h3>Event Created!</h3>
-          <p><strong>Event Code:</strong> <span className="code">{generatedCode}</span></p>
-          <p>Event link:</p>
-          <p><span className="code">{eventLink || `/e/${generatedCode}`}</span></p>
-          {qrDataUrl && (
-            <div style={{ marginTop: '15px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-              <img src={qrDataUrl} alt="Event QR code" width={220} height={220} />
-              <div style={{ color: '#065f46' }}>
-                <div><strong>Scan to join</strong></div>
-                <div style={{ fontSize: '0.9em', marginTop: '6px' }}>
-                  Works locally and on Vercel
-                </div>
-              </div>
-            </div>
-          )}
-          <div style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <a href={`/e/${generatedCode}`} style={{ padding: '8px 16px', background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: '4px' }}>
-              View Event Page →
-            </a>
-            <a href={`/e/${generatedCode}/control`} style={{ padding: '8px 16px', background: '#16a34a', color: 'white', textDecoration: 'none', borderRadius: '4px' }}>
-              Open Control Panel →
-            </a>
-          </div>
-        </div>
-      )}
-
-      {!generatedCode && (
-        <div style={{ marginTop: '30px', padding: '15px', background: '#f9fafb', borderRadius: '4px' }}>
-          <h3>After Creating:</h3>
-          <p>The event code will be automatically generated from your title.</p>
-          <p>You'll receive a unique code and shareable link after creation.</p>
-        </div>
-      )}
+      <div style={{ marginTop: '30px', padding: '15px', background: '#f9fafb', borderRadius: '4px' }}>
+        <h3>After Creating:</h3>
+        <p>The event code will be automatically generated from your title.</p>
+        <p>You'll be automatically redirected to the Event Control Panel after creation.</p>
+      </div>
 
       <p style={{ marginTop: '20px' }}>
         <a href="/">← Back to home</a>

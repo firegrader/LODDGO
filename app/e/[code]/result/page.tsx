@@ -58,62 +58,68 @@ export default function ResultPage() {
 
   if (loading) {
     return (
-      <main>
-        <h1>Loading...</h1>
-      </main>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff7ed' }}>
+        <div style={{ fontSize: '18px', color: '#64748b' }}>Loading...</div>
+      </div>
     );
   }
 
   if (error || !result) {
     return (
-      <main>
-        <h1>Draw Result</h1>
-        <p className="error">{error || 'No draw result available for this event yet.'}</p>
-        <p><a href={`/e/${code}`}>← Back to event</a></p>
-        <p><a href="/">← Back to home</a></p>
-      </main>
+      <div style={{ minHeight: '100vh', padding: '20px', background: '#fff7ed' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', padding: '32px 24px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: '#f97316' }}>Draw Result</h1>
+          <p style={{ color: '#dc2626', marginBottom: '20px' }}>{error || 'No draw result available for this event yet.'}</p>
+          <p><a href={`/e/${code}`} style={{ color: '#f97316', textDecoration: 'none' }}>← Back to event</a></p>
+          <p style={{ marginTop: '10px' }}><a href="/" style={{ color: '#f97316', textDecoration: 'none' }}>← Back to home</a></p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main>
-      <h1>Draw Result</h1>
-      <h2>{result.event.title}</h2>
+    <div style={{ minHeight: '100vh', padding: '20px', background: '#fff7ed' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', padding: '32px 24px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '8px', color: '#f97316' }}>Draw Result</h1>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px', color: '#111827' }}>{result.event.title}</h2>
 
-      <h3 style={{ marginTop: '20px' }}>Drawn Tickets</h3>
-      {result.draws.map((draw) => (
-        <div
-          key={draw.id}
-          style={{ marginTop: '15px', padding: '15px', background: '#f9fafb', borderRadius: '4px' }}
-        >
-          <div className="success" style={{ fontSize: '1.1em', padding: '10px', textAlign: 'center' }}>
-            <p><strong>Winning Ticket Number:</strong></p>
-            <p style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#2563eb' }}>
-              #{draw.winning_ticket_number}
-            </p>
-          </div>
-
-          {draw.winner && (
-            <div style={{ marginTop: '10px' }}>
-              <p><strong>Winner:</strong> {draw.winner.buyer_display_name || 'Not provided'}</p>
-              <p><strong>Tickets Purchased:</strong> {draw.winner.tickets_purchased}</p>
-              <p><strong>Order Date:</strong> {new Date(draw.winner.order_date).toLocaleString('no-NO')}</p>
+        <h3 style={{ fontSize: '20px', fontWeight: '600', marginTop: '32px', marginBottom: '16px', color: '#f97316' }}>Drawn Tickets</h3>
+        {result.draws.map((draw) => (
+          <div
+            key={draw.id}
+            style={{ marginTop: '16px', padding: '20px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}
+          >
+            <div style={{ fontSize: '1.1em', padding: '12px', textAlign: 'center', background: '#dcfce7', borderRadius: '8px', marginBottom: '16px' }}>
+              <p style={{ marginBottom: '8px', color: '#166534', fontWeight: '500' }}><strong>Winning Ticket Number:</strong></p>
+              <p style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#16a34a', margin: 0 }}>
+                #{draw.winning_ticket_number}
+              </p>
             </div>
-          )}
 
-          <div style={{ marginTop: '10px', color: '#64748b' }}>
-            <p><strong>Draw Method:</strong> {draw.method}</p>
-            <p><strong>Drawn At:</strong> {new Date(draw.drawn_at).toLocaleString('no-NO')}</p>
+            {draw.winner && (
+              <div style={{ marginTop: '12px' }}>
+                <p style={{ marginBottom: '8px' }}><strong>Winner:</strong> {draw.winner.buyer_display_name || 'Not provided'}</p>
+                <p style={{ marginBottom: '8px' }}><strong>Tickets Purchased:</strong> {draw.winner.tickets_purchased}</p>
+                <p style={{ marginBottom: '8px' }}><strong>Order Date:</strong> {new Date(draw.winner.order_date).toLocaleString('no-NO')}</p>
+              </div>
+            )}
+
+            <div style={{ marginTop: '12px', color: '#64748b', fontSize: '14px' }}>
+              <p style={{ marginBottom: '4px' }}><strong>Draw Method:</strong> {draw.method}</p>
+              <p style={{ margin: 0 }}><strong>Drawn At:</strong> {new Date(draw.drawn_at).toLocaleString('no-NO')}</p>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
 
-      <p style={{ marginTop: '20px' }}>
-        <a href={`/e/${code}`}>← Back to event</a>
-      </p>
-      <p>
-        <a href="/">← Back to home</a>
-      </p>
-    </main>
+        <div style={{ marginTop: '32px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+          <p style={{ marginBottom: '10px' }}>
+            <a href={`/e/${code}`} style={{ color: '#f97316', textDecoration: 'none' }}>← Back to event</a>
+          </p>
+          <p style={{ margin: 0 }}>
+            <a href="/" style={{ color: '#f97316', textDecoration: 'none' }}>← Back to home</a>
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

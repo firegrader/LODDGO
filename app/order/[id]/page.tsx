@@ -91,27 +91,30 @@ export default function OrderPage() {
 
   if (loading) {
     return (
-      <main>
-        <h1>Loading...</h1>
-      </main>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff7ed' }}>
+        <div style={{ fontSize: '18px', color: '#64748b' }}>Loading...</div>
+      </div>
     );
   }
 
   if (error || !order) {
     return (
-      <main>
-        <h1>Order Not Found</h1>
-        <p className="error">{error || 'The order you are looking for does not exist.'}</p>
-        <p><a href="/">← Back to home</a></p>
-      </main>
+      <div style={{ minHeight: '100vh', padding: '20px', background: '#fff7ed' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', padding: '32px 24px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: '#f97316' }}>Order Not Found</h1>
+          <p style={{ color: '#dc2626', marginBottom: '20px' }}>{error || 'The order you are looking for does not exist.'}</p>
+          <p><a href="/" style={{ color: '#f97316', textDecoration: 'none' }}>← Back to home</a></p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main>
-      <h1>You are in! Good luck!</h1>
+    <div style={{ minHeight: '100vh', padding: '20px', background: '#fff7ed' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', padding: '32px 24px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '8px', color: '#f97316' }}>You are in! Good luck!</h1>
 
-      <h2>You have {totalTickets} ticket{totalTickets === 1 ? '' : 's'}</h2>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px', color: '#111827' }}>You have {totalTickets} ticket{totalTickets === 1 ? '' : 's'}</h2>
       <ul className="ticket-list">
         {tickets.map((ticket) => {
           const isWinner = draws.some(
@@ -136,85 +139,187 @@ export default function OrderPage() {
         })}
       </ul>
 
-      {event && (
-        <div style={{ marginTop: '30px', padding: '16px', background: '#f9fafb', borderRadius: '8px' }}>
-          <h2>Buy More Tickets</h2>
-          {moreError && <div className="error">{moreError}</div>}
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setBuyingMore(true);
-              setMoreError(null);
+        {event && (
+          <div style={{ marginTop: '32px' }}>
+            <h2 style={{ 
+              fontSize: '20px', 
+              fontWeight: '600', 
+              color: '#f97316', 
+              marginBottom: '16px' 
+            }}>
+              More chances to win?
+            </h2>
 
-              try {
-                const response = await fetch('/api/orders', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    event_code: event.code,
-                    qty: moreQty,
-                    buyer_display_name: order.buyer_display_name || null,
-                  }),
-                });
-
-                const data = await response.json();
-                if (!response.ok) {
-                  throw new Error(data.error || 'Failed to buy more tickets');
-                }
-
-                // Go to the new order confirmation page
-                window.location.href = `/order/${data.order.id}`;
-              } catch (err: any) {
-                setMoreError(err.message || 'Failed to buy more tickets');
-                setBuyingMore(false);
-              }
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button
-                type="button"
-                onClick={() => setMoreQty((q) => Math.max(1, q - 1))}
-                aria-label="Decrease quantity"
-                style={{ width: '36px', height: '36px' }}
-              >
-                -
-              </button>
-              <input
-                type="number"
-                min="1"
-                value={moreQty}
-                onChange={(e) => setMoreQty(Math.max(1, Number(e.target.value) || 1))}
-                style={{ width: '60px', textAlign: 'center', height: '36px' }}
-              />
-              <button
-                type="button"
-                onClick={() => setMoreQty((q) => q + 1)}
-                aria-label="Increase quantity"
-                style={{ width: '36px', height: '36px' }}
-              >
-                +
-              </button>
-              <div style={{ marginLeft: 'auto', marginRight: '10px' }}>
-                Total: <strong>{(event.price_nok ?? 0) * moreQty} NOK</strong>
+            {moreError && (
+              <div style={{ background: '#fee2e2', color: '#dc2626', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>
+                {moreError}
               </div>
-              <button type="submit" disabled={buyingMore} style={{ width: '90px', height: '36px' }}>
-                {buyingMore ? '...' : 'Buy'}
+            )}
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setBuyingMore(true);
+                setMoreError(null);
+
+                try {
+                  const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      event_code: event.code,
+                      qty: moreQty,
+                      buyer_display_name: order.buyer_display_name || null,
+                    }),
+                  });
+
+                  const data = await response.json();
+                  if (!response.ok) {
+                    throw new Error(data.error || 'Failed to buy more tickets');
+                  }
+
+                  // Go to the new order confirmation page
+                  window.location.href = `/order/${data.order.id}`;
+                } catch (err: any) {
+                  setMoreError(err.message || 'Failed to buy more tickets');
+                  setBuyingMore(false);
+                }
+              }}
+            >
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ 
+                  fontSize: '14px', 
+                  color: '#6b7280', 
+                  marginBottom: '12px',
+                  display: 'block'
+                }}>
+                  Tickets ({event.price_nok} NOK per ticket)
+                </label>
+                
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '16px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  background: '#ffffff',
+                  marginBottom: '16px'
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setMoreQty((q) => Math.max(1, q - 1))}
+                    aria-label="Decrease quantity"
+                    className="qty-button"
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      background: '#ffffff',
+                      fontSize: '20px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0,
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    -
+                  </button>
+                  <div style={{ 
+                    fontSize: '18px', 
+                    fontWeight: '600', 
+                    color: '#111827',
+                    minWidth: '30px',
+                    textAlign: 'center',
+                    background: '#ffffff',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    padding: '8px 12px'
+                  }}>
+                    {moreQty}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMoreQty((q) => q + 1)}
+                    aria-label="Increase quantity"
+                    className="qty-button"
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      background: '#ffffff',
+                      fontSize: '20px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0,
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    +
+                  </button>
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '16px', color: '#6b7280', fontWeight: '500' }}>Total</span>
+                    <span style={{ fontSize: '18px', color: '#f97316', fontWeight: '600' }}>{(event.price_nok ?? 0) * moreQty} NOK</span>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={buyingMore}
+                className="vipps-button"
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#ffffff',
+                  background: buyingMore ? '#fb923c' : '#f97316',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: buyingMore ? 'not-allowed' : 'pointer',
+                  marginBottom: '8px',
+                  opacity: buyingMore ? 0.7 : 1,
+                  transition: 'background 0.2s'
+                }}
+              >
+                {buyingMore ? 'Processing...' : 'Complete purchase in Vipps'}
               </button>
-            </div>
-          </form>
+              
+              <p style={{ 
+                fontSize: '12px', 
+                color: '#9ca3af', 
+                textAlign: 'center',
+                margin: 0
+              }}>
+                Secure checkout
+              </p>
+            </form>
+          </div>
+        )}
+
+        <div style={{ marginTop: '32px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+          <p style={{ marginBottom: '10px' }}>
+            <a href={`/order/${order.id}/purchases`} style={{ color: '#f97316', textDecoration: 'none' }}>Your purchases →</a>
+          </p>
+
+          {event && (
+            <p style={{ margin: 0 }}>
+              <a href={`/e/${event.code}/result`} style={{ color: '#f97316', textDecoration: 'none' }}>View draw results →</a>
+            </p>
+          )}
         </div>
-      )}
-
-      <p style={{ marginTop: '10px' }}>
-        <a href={`/order/${order.id}/purchases`}>Your purchases →</a>
-      </p>
-
-      {event && (
-        <p>
-          <a href={`/e/${event.code}/result`}>View draw results →</a>
-        </p>
-      )}
-
-    </main>
+      </div>
+    </div>
   );
 }

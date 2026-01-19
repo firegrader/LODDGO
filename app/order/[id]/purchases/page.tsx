@@ -60,61 +60,68 @@ export default function PurchasesPage() {
 
   if (loading) {
     return (
-      <main>
-        <h1>Loading...</h1>
-      </main>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff7ed' }}>
+        <div style={{ fontSize: '18px', color: '#64748b' }}>Loading...</div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main>
-        <h1>Your Purchases</h1>
-        <p className="error">{error}</p>
-      </main>
+      <div style={{ minHeight: '100vh', padding: '20px', background: '#fff7ed' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', padding: '32px 24px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: '#f97316' }}>Your Purchases</h1>
+          <p style={{ color: '#dc2626', marginBottom: '20px' }}>{error}</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main>
-      <h1>Your Purchases</h1>
-      {event && <h2>{event.title}</h2>}
+    <div style={{ minHeight: '100vh', padding: '20px', background: '#fff7ed' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', padding: '32px 24px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '8px', color: '#f97316' }}>Your Purchases</h1>
+        {event && <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px', color: '#111827' }}>{event.title}</h2>}
 
-      {purchases.map((purchase) => (
-        <div
-          key={purchase.id}
-          style={{ marginTop: '20px', padding: '15px', background: '#f9fafb', borderRadius: '4px' }}
-        >
+        {purchases.map((purchase) => (
           <div
-            className="success"
-            style={{
-              fontSize: '1.1em',
-              padding: '12px',
-              textAlign: 'center',
-              background: '#dcfce7',
-              color: '#166534',
-            }}
+            key={purchase.id}
+            style={{ marginTop: '20px', padding: '20px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}
           >
-            <p><strong>Thank you for your purchase!</strong></p>
-            <p>Your tickets have been purchased successfully.</p>
-          </div>
+            <div
+              style={{
+                fontSize: '1.1em',
+                padding: '12px',
+                textAlign: 'center',
+                background: '#dcfce7',
+                color: '#166534',
+                borderRadius: '8px',
+                marginBottom: '16px'
+              }}
+            >
+              <p style={{ marginBottom: '4px', fontWeight: '600' }}>Thank you for your purchase!</p>
+              <p style={{ margin: 0 }}>Your tickets have been purchased successfully.</p>
+            </div>
 
-          <div style={{ marginTop: '10px' }}>
-            <p><strong>Order ID:</strong> <span className="code">{purchase.id}</span></p>
-            {purchase.buyer_display_name && (
-              <p><strong>Buyer:</strong> {purchase.buyer_display_name}</p>
-            )}
-            <p><strong>Number of Tickets:</strong> {purchase.qty}</p>
-            <p><strong>Total Amount:</strong> {purchase.amount_nok} NOK</p>
-            <p><strong>Status:</strong> {purchase.paid ? 'Paid' : 'Pending'}</p>
-            <p><strong>Purchased At:</strong> {new Date(purchase.created_at).toLocaleString('no-NO')}</p>
+            <div style={{ marginTop: '12px' }}>
+              <p style={{ marginBottom: '8px' }}><strong>Order ID:</strong> <span className="code">{purchase.id}</span></p>
+              {purchase.buyer_display_name && (
+                <p style={{ marginBottom: '8px' }}><strong>Buyer:</strong> {purchase.buyer_display_name}</p>
+              )}
+              <p style={{ marginBottom: '8px' }}><strong>Number of Tickets:</strong> {purchase.qty}</p>
+              <p style={{ marginBottom: '8px' }}><strong>Total Amount:</strong> {purchase.amount_nok} NOK</p>
+              <p style={{ marginBottom: '8px' }}><strong>Status:</strong> {purchase.paid ? 'Paid' : 'Pending'}</p>
+              <p style={{ margin: 0 }}><strong>Purchased At:</strong> {new Date(purchase.created_at).toLocaleString('no-NO')}</p>
+            </div>
           </div>
+        ))}
+
+        <div style={{ marginTop: '32px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+          <p style={{ margin: 0 }}>
+            <a href={`/order/${orderId}`} style={{ color: '#f97316', textDecoration: 'none' }}>← Back to tickets</a>
+          </p>
         </div>
-      ))}
-
-      <p style={{ marginTop: '20px' }}>
-        <a href={`/order/${orderId}`}>← Back to tickets</a>
-      </p>
-    </main>
+      </div>
+    </div>
   );
 }

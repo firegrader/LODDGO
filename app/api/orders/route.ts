@@ -56,6 +56,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate nickname uniqueness if provided
+    if (buyer_display_name) {
+      const { supabaseServer } = await import('@/lib/supabaseServer');
+      const { data: existingOrder } = await supabaseServer
+        .from('orders')
+        .select('id')
+        .eq('event_id', event.id)
+        .eq('buyer_display_name', buyer_display_name)
+        .limit(1)
+        .single();
+
+      if (existingOrder) {
+        return NextResponse.json(
+          { error: `Nickname "${buyer_display_name}" is already taken for this event. Please choose a different name.` },
+          { status: 409 }
+        );
+      }
+    }
+
     // Calculate amount
     const amount_nok = event.price_nok * qty;
 

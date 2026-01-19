@@ -6,6 +6,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
 import { useParams } from 'next/navigation';
 
 interface EventStats {
@@ -50,6 +51,7 @@ export default function ControlPanel() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [drawError, setDrawError] = useState<string | null>(null);
   const [drawing, setDrawing] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   const fetchStats = async () => {
     try {
@@ -108,6 +110,29 @@ export default function ControlPanel() {
     };
   }, [code]);
 
+  useEffect(() => {
+    const buildQr = async () => {
+      if (!code) {
+        setQrDataUrl(null);
+        return;
+      }
+      const link = `${window.location.origin}/e/${code}`;
+      try {
+        const dataUrl = await QRCode.toDataURL(link, {
+          width: 220,
+          margin: 1,
+          color: { dark: '#111827', light: '#ffffff' },
+        });
+        setQrDataUrl(dataUrl);
+      } catch (err) {
+        console.error('Failed to generate QR code:', err);
+        setQrDataUrl(null);
+      }
+    };
+
+    buildQr();
+  }, [code]);
+
   if (loading && !stats) {
     return (
       <main>
@@ -139,6 +164,17 @@ export default function ControlPanel() {
       <h2>{stats.event.title}</h2>
       <p>Event Code: <span className="code">{stats.event.code}</span></p>
       <p>Event link: <span className="code">/e/{stats.event.code}</span></p>
+      {qrDataUrl && (
+        <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <img src={qrDataUrl} alt="Event QR code" width={220} height={220} />
+          <div style={{ color: '#64748b' }}>
+            <div><strong>Scan to join</strong></div>
+            <div style={{ fontSize: '0.9em', marginTop: '6px' }}>
+              Works locally and on Vercel
+            </div>
+          </div>
+        </div>
+      )}
       <p>
         Status: <strong>{stats.event.status}</strong>
         {lastRefresh && (
