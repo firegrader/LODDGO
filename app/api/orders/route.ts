@@ -5,18 +5,23 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { buyTicketsTransactionally, getEventByCode } from '@/lib/loddgo';
+import { supabaseServer } from '@/lib/supabaseServer';
 
 export async function POST(request: NextRequest) {
   let event_code: string | undefined;
   let qty: number | undefined;
   let buyer_display_name: string | null | undefined;
   let idempotency_key: string | null | undefined;
+  let is_nickname: boolean | undefined;
 
   try {
     const body = await request.json();
 
     // Validation
-    ({ event_code, buyer_display_name, qty, idempotency_key } = body);
+    ({ event_code, buyer_display_name, qty, idempotency_key, is_nickname } = body);
+    
+    // Get user_id from request header (for simulation, will come from auth token later)
+    const user_id = request.headers.get('x-user-id') || null;
 
     if (!event_code || typeof event_code !== 'string') {
       return NextResponse.json(
@@ -58,7 +63,6 @@ export async function POST(request: NextRequest) {
 
     // Validate nickname uniqueness if provided
     if (buyer_display_name) {
-      const { supabaseServer } = await import('@/lib/supabaseServer');
       const { data: existingOrder } = await supabaseServer
         .from('orders')
         .select('id')
@@ -78,6 +82,48 @@ export async function POST(request: NextRequest) {
     // Calculate amount
     const amount_nok = event.price_nok * qty;
 
+    // Handle user identity tracking
+    let identity_id: string | null = null;
+
+    if (user_id && buyer_display_name) {
+      // Check if user already has an identity for this event
+      const { data: existingIdentity } = await supabaseServer
+        .from('user_event_identities')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('event_id', event.id)
+        .single();
+
+      if (existingIdentity) {
+        // Update last_used_at
+        await supabaseServer
+          .from('user_event_identities')
+          .update({ last_used_at: new Date().toISOString() })
+          .eq('id', existingIdentity.id);
+        
+        identity_id = existingIdentity.id;
+      } else {
+        // Create new identity for this user+event combination
+        const { data: newIdentity, error: identityError } = await supabaseServer
+          .from('user_event_identities')
+          .insert({
+            user_id: user_id,
+            event_id: event.id,
+            buyer_display_name: buyer_display_name,
+            is_nickname: is_nickname || false,
+          })
+          .select()
+          .single();
+
+        if (identityError) {
+          console.error('Error creating user event identity:', identityError);
+          // Continue without identity_id if creation fails
+        } else if (newIdentity) {
+          identity_id = newIdentity.id;
+        }
+      }
+    }
+
     // Create order with mock payment (paid=true for MVP)
     const { order, tickets } = await buyTicketsTransactionally({
       event_id: event.id,
@@ -87,6 +133,8 @@ export async function POST(request: NextRequest) {
       paid: true, // Mock payment for MVP
       payment_provider: 'mock',
       idempotency_key: idempotency_key || null,
+      user_id: user_id || null,
+      identity_id: identity_id,
     });
 
     return NextResponse.json(

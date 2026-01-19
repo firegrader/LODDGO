@@ -23,6 +23,8 @@ Core principles:
    - Run `supabase/schema.sql`
    - Run `supabase/functions.sql`
    - If you need multiple draws per event, run `supabase/migrations/20260115_update_draws.sql`
+   - Run `supabase/migrations/20250116000000_add_user_identities.sql` (for user identity tracking)
+   - Run `supabase/migrations/20260119151749_add_organizer_to_events.sql` (for organizer tracking)
 
 ## Run locally
 

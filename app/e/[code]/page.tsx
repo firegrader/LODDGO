@@ -44,7 +44,14 @@ export default function BuyPage() {
   const [useNickname, setUseNickname] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/events/${code}`)
+    // Add cache-busting to ensure fresh data
+    fetch(`/api/events/${code}?t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      },
+    })
       .then(res => {
         if (!res.ok) {
           throw new Error('Event not found');
@@ -123,15 +130,25 @@ export default function BuyPage() {
         }
       }
       
-      console.log('Submitting purchase:', { event_code: code, qty, buyer_display_name: displayName });
+      // Get user_id if authenticated (for participants, this would come from real auth)
+      const authData = typeof window !== 'undefined' 
+        ? localStorage.getItem('loddgo_participant_auth') 
+        : null;
+      const user_id = authData ? JSON.parse(authData).user_id : null;
+      
+      console.log('Submitting purchase:', { event_code: code, qty, buyer_display_name: displayName, user_id });
       
       const response = await fetch('/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(user_id && { 'x-user-id': user_id }),
+        },
         body: JSON.stringify({
           event_code: code,
           qty: qty,
           buyer_display_name: displayName,
+          is_nickname: useNickname,
         }),
       });
 
@@ -147,11 +164,15 @@ export default function BuyPage() {
           // Retry with new nickname
           const retryResponse = await fetch('/api/orders', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              ...(user_id && { 'x-user-id': user_id }),
+            },
             body: JSON.stringify({
               event_code: code,
               qty: qty,
               buyer_display_name: newNickname,
+              is_nickname: true,
             }),
           });
           
@@ -232,7 +253,7 @@ export default function BuyPage() {
           marginBottom: '32px',
           fontFamily: 'sans-serif'
         }}>
-          LoddGo MVP 1.1 dev
+          {event.title}
         </h1>
 
         {error && (
@@ -275,9 +296,14 @@ export default function BuyPage() {
                   style={{
                     width: '20px',
                     height: '20px',
+                    minWidth: '20px',
+                    minHeight: '20px',
                     marginRight: '10px',
                     cursor: 'pointer',
-                    accentColor: '#14b8a6'
+                    borderRadius: '4px',
+                    border: '2px solid #d1d5db',
+                    accentColor: '#f97316',
+                    flexShrink: 0
                   }}
                 />
                 <span>Create a fun nickname for me instead</span>
@@ -320,20 +346,23 @@ export default function BuyPage() {
               fontSize: '20px', 
               fontWeight: '600', 
               color: '#f97316', 
-              marginBottom: '16px' 
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              flexWrap: 'wrap'
             }}>
-              How many tickets?
+              <span>How many tickets?</span>
+              <span style={{ 
+                fontSize: '16px', 
+                fontWeight: '400', 
+                color: '#6b7280' 
+              }}>
+                ({event.price_nok} NOK per ticket)
+              </span>
             </h2>
 
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ 
-                fontSize: '14px', 
-                color: '#6b7280', 
-                marginBottom: '12px',
-                display: 'block'
-              }}>
-                Tickets ({event.price_nok} NOK per ticket)
-              </label>
               
               <div style={{ 
                 display: 'flex', 
@@ -351,9 +380,11 @@ export default function BuyPage() {
                   aria-label="Decrease quantity"
                   className="qty-button"
                   style={{
-                    width: '40px',
-                    height: '40px',
-                    border: '1px solid #d1d5db',
+                    width: '44px',
+                    height: '44px',
+                    minWidth: '44px',
+                    minHeight: '44px',
+                    border: '2px solid #d1d5db',
                     borderRadius: '8px',
                     background: '#ffffff',
                     fontSize: '20px',
@@ -364,7 +395,8 @@ export default function BuyPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: 0,
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    flexShrink: 0
                   }}
                 >
                   -
@@ -373,12 +405,16 @@ export default function BuyPage() {
                   fontSize: '18px', 
                   fontWeight: '600', 
                   color: '#111827',
-                  minWidth: '30px',
+                  minWidth: '44px',
+                  height: '44px',
                   textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   background: '#ffffff',
-                  border: '1px solid #d1d5db',
+                  border: '2px solid #d1d5db',
                   borderRadius: '8px',
-                  padding: '8px 12px'
+                  padding: '0 12px'
                 }}>
                   {qty}
                 </div>
@@ -388,9 +424,11 @@ export default function BuyPage() {
                   aria-label="Increase quantity"
                   className="qty-button"
                   style={{
-                    width: '40px',
-                    height: '40px',
-                    border: '1px solid #d1d5db',
+                    width: '44px',
+                    height: '44px',
+                    minWidth: '44px',
+                    minHeight: '44px',
+                    border: '2px solid #d1d5db',
                     borderRadius: '8px',
                     background: '#ffffff',
                     fontSize: '20px',
@@ -401,7 +439,8 @@ export default function BuyPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: 0,
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    flexShrink: 0
                   }}
                 >
                   +

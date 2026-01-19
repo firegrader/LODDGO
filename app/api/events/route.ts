@@ -12,6 +12,9 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Get organizer_id from header (for simulation, will come from auth token later)
+    const organizer_id = request.headers.get('x-organizer-id') || null;
+
     // Validation
     const { title, price_nok, status, draw_at } = body;
 
@@ -68,13 +71,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create event (no authentication required for MVP)
+    // Create event with organizer_id
     const event = await createEvent({
       code: code,
       title: title.trim(),
       price_nok,
       status: status || 'live',
       draw_at: draw_at || null,
+      organizer_id: organizer_id,
     });
 
     return NextResponse.json(event, { status: 201 });
@@ -88,6 +92,17 @@ export async function POST(request: NextRequest) {
           { status: 409 }
         );
       }
+      if (error.message.includes('organizer_id') || error.message.includes('column') || error.message.includes('does not exist')) {
+        return NextResponse.json(
+          { error: 'Database migration required. Please run the migration: supabase/migrations/20260119151749_add_organizer_to_events.sql' },
+          { status: 500 }
+        );
+      }
+      // Return the actual error message for debugging
+      return NextResponse.json(
+        { error: error.message || 'Internal server error' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(

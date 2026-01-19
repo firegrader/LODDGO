@@ -52,6 +52,7 @@ export default function ControlPanel() {
   const [drawError, setDrawError] = useState<string | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [eventUrl, setEventUrl] = useState<string>('');
 
   const fetchStats = async () => {
     try {
@@ -117,6 +118,7 @@ export default function ControlPanel() {
         return;
       }
       const link = `${window.location.origin}/e/${code}`;
+      setEventUrl(link); // Store the full URL for display
       try {
         const dataUrl = await QRCode.toDataURL(link, {
           width: 220,
@@ -130,24 +132,28 @@ export default function ControlPanel() {
       }
     };
 
-    buildQr();
+    if (typeof window !== 'undefined') {
+      buildQr();
+    }
   }, [code]);
 
   if (loading && !stats) {
     return (
-      <main>
-        <h1>Loading Control Panel...</h1>
-      </main>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#eff6ff' }}>
+        <div style={{ fontSize: '18px', color: '#64748b' }}>Loading Control Panel...</div>
+      </div>
     );
   }
 
   if (error || !stats) {
     return (
-      <main>
-        <h1>Event Control Panel</h1>
-        <p className="error">{error || 'Event not found'}</p>
-        <p><a href="/">← Back to home</a></p>
-      </main>
+      <div style={{ minHeight: '100vh', padding: '20px', background: '#eff6ff' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', padding: '32px 24px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: '#2563eb' }}>Event Control Panel</h1>
+          <p style={{ color: '#dc2626', marginBottom: '20px' }}>{error || 'Event not found'}</p>
+          <p><a href="/" style={{ color: '#2563eb', textDecoration: 'none' }}>← Back to home</a></p>
+        </div>
+      </div>
     );
   }
 
@@ -156,163 +162,211 @@ export default function ControlPanel() {
   };
 
   return (
-    <main>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <h1>Event Control Panel</h1>
-      </div>
+    <div style={{ minHeight: '100vh', padding: '20px', background: '#eff6ff' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto', background: '#ffffff', padding: '32px 24px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '8px', color: '#2563eb' }}>Event Control Panel</h1>
 
-      <h2>{stats.event.title}</h2>
-      <p>Event Code: <span className="code">{stats.event.code}</span></p>
-      <p>Event link: <span className="code">/e/{stats.event.code}</span></p>
-      {qrDataUrl && (
-        <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <img src={qrDataUrl} alt="Event QR code" width={220} height={220} />
-          <div style={{ color: '#64748b' }}>
-            <div><strong>Scan to join</strong></div>
-            <div style={{ fontSize: '0.9em', marginTop: '6px' }}>
-              Works locally and on Vercel
+        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>{stats.event.title}</h2>
+        <p style={{ marginBottom: '8px' }}>Event Code: <span className="code">{stats.event.code}</span></p>
+        <p style={{ marginBottom: '16px' }}>
+          Event link:{' '}
+          {eventUrl ? (
+            <a 
+              href={eventUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ 
+                color: '#2563eb', 
+                textDecoration: 'none',
+                wordBreak: 'break-all'
+              }}
+              className="code"
+            >
+              {eventUrl}
+            </a>
+          ) : (
+            <span className="code">/e/{stats.event.code}</span>
+          )}
+        </p>
+        {qrDataUrl && (
+          <div style={{ marginTop: '16px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <img src={qrDataUrl} alt="Event QR code" width={220} height={220} />
+            <div style={{ color: '#64748b' }}>
+              <div><strong>Scan to join</strong></div>
+              <div style={{ fontSize: '0.9em', marginTop: '6px' }}>
+                Works locally and on Vercel
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      <p>
-        Status: <strong>{stats.event.status}</strong>
-        {lastRefresh && (
-          <span style={{ color: '#64748b', fontSize: '0.85em', marginLeft: '10px' }}>
-            (Last updated: {lastRefresh.toLocaleTimeString()})
-          </span>
         )}
-      </p>
-      <p>Price per ticket: <strong>{stats.event.price_nok} NOK</strong></p>
+        <p style={{ marginBottom: '8px' }}>
+          Status: <strong>{stats.event.status}</strong>
+          {lastRefresh && (
+            <span style={{ color: '#64748b', fontSize: '0.85em', marginLeft: '10px' }}>
+              (Last updated: {lastRefresh.toLocaleTimeString()})
+            </span>
+          )}
+        </p>
+        <p style={{ marginBottom: '32px' }}>Price per ticket: <strong>{stats.event.price_nok} NOK</strong></p>
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-        gap: '15px', 
-        marginTop: '30px' 
-      }}>
-        <div style={{ padding: '20px', background: '#eff6ff', borderRadius: '4px', textAlign: 'center' }}>
-          <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#2563eb' }}>
-            {stats.stats.total_orders}
-          </div>
-          <div style={{ color: '#64748b', marginTop: '5px' }}>Total Orders</div>
-        </div>
-
-        <div style={{ padding: '20px', background: '#f0fdf4', borderRadius: '4px', textAlign: 'center' }}>
-          <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#16a34a' }}>
-            {stats.stats.total_tickets}
-          </div>
-          <div style={{ color: '#64748b', marginTop: '5px' }}>Tickets Sold</div>
-        </div>
-
-        <div style={{ padding: '20px', background: '#fef3c7', borderRadius: '4px', textAlign: 'center' }}>
-          <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#d97706' }}>
-            {stats.stats.total_revenue} NOK
-          </div>
-          <div style={{ color: '#64748b', marginTop: '5px' }}>Total Revenue</div>
-        </div>
-
-        <div style={{ padding: '20px', background: '#fce7f3', borderRadius: '4px', textAlign: 'center' }}>
-          <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#db2777' }}>
-            {stats.stats.unique_buyers}
-          </div>
-          <div style={{ color: '#64748b', marginTop: '5px' }}>Unique Buyers</div>
-        </div>
-        <div style={{ padding: '20px', background: '#ede9fe', borderRadius: '4px', textAlign: 'center' }}>
-          <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#7c3aed' }}>
-            {stats.stats.remaining_tickets}
-          </div>
-          <div style={{ color: '#64748b', marginTop: '5px' }}>Remaining Tickets</div>
-        </div>
-      </div>
-
-      <h3 style={{ marginTop: '40px' }}>Recent Purchases</h3>
-      {stats.recent_orders.length === 0 ? (
-        <p style={{ color: '#64748b', fontStyle: 'italic' }}>No purchases yet</p>
-      ) : (
-        <div style={{ marginTop: '15px' }}>
-          {stats.recent_orders.map((order) => (
-            <div
-              key={order.id}
-              style={{
-                padding: '15px',
-                background: '#f9fafb',
-                borderRadius: '4px',
-                marginBottom: '10px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div>
-                <strong>{order.buyer_name}</strong>
-                <div style={{ color: '#64748b', fontSize: '0.9em', marginTop: '5px' }}>
-                  {order.qty} ticket{order.qty > 1 ? 's' : ''} • {order.amount_nok} NOK
-                </div>
-              </div>
-              <div style={{ color: '#64748b', fontSize: '0.9em' }}>
-                {formatDateTime(order.created_at)}
-              </div>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+          gap: '15px', 
+          marginTop: '30px' 
+        }}>
+          <div style={{ padding: '20px', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', textAlign: 'center' }}>
+            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#2563eb' }}>
+              {stats.stats.total_orders}
             </div>
-          ))}
-        </div>
-      )}
+            <div style={{ color: '#64748b', marginTop: '5px' }}>Total Orders</div>
+          </div>
 
-      <h3 style={{ marginTop: '40px' }}>Draw Control</h3>
-      {drawError && <div className="error">{drawError}</div>}
-      <div style={{ display: 'flex', gap: '15px', alignItems: 'center', marginTop: '15px' }}>
-        <button onClick={handleDrawNext} disabled={drawing || stats.stats.remaining_tickets === 0}>
-          {drawing
-            ? 'Drawing...'
-            : stats.stats.remaining_tickets === 0
-              ? 'All Tickets Drawn'
-              : 'Draw Next Ticket'}
-        </button>
-        <div style={{ color: '#64748b' }}>
-          Draws completed: {stats.stats.total_draws}
-        </div>
-      </div>
-
-      <h3 style={{ marginTop: '30px' }}>Drawn Tickets</h3>
-      {stats.draws.length === 0 ? (
-        <p style={{ color: '#64748b', fontStyle: 'italic' }}>No tickets drawn yet</p>
-      ) : (
-        <div style={{ marginTop: '15px' }}>
-          {stats.draws.map((draw) => (
-            <div
-              key={draw.id}
-              style={{
-                padding: '15px',
-                background: '#f9fafb',
-                borderRadius: '4px',
-                marginBottom: '10px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div>
-                <strong>Ticket #{draw.winning_ticket_number}</strong>
-                <div style={{ color: '#64748b', fontSize: '0.9em', marginTop: '5px' }}>
-                  Method: {draw.method}
-                </div>
-                <div style={{ color: '#64748b', fontSize: '0.9em', marginTop: '5px' }}>
-                  Winner: {draw.winner_name || 'Anonymous'}
-                </div>
-              </div>
-              <div style={{ color: '#64748b', fontSize: '0.9em' }}>
-                {formatDateTime(draw.drawn_at)}
-              </div>
+          <div style={{ padding: '20px', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', textAlign: 'center' }}>
+            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#2563eb' }}>
+              {stats.stats.total_tickets}
             </div>
-          ))}
-        </div>
-      )}
+            <div style={{ color: '#64748b', marginTop: '5px' }}>Tickets Sold</div>
+          </div>
 
-      <div style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
-        <a href="/" style={{ padding: '10px 20px', color: '#64748b', textDecoration: 'none' }}>
-          ← Back to home
-        </a>
+          <div style={{ padding: '20px', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', textAlign: 'center' }}>
+            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#2563eb' }}>
+              {stats.stats.total_revenue} NOK
+            </div>
+            <div style={{ color: '#64748b', marginTop: '5px' }}>Total Revenue</div>
+          </div>
+
+          <div style={{ padding: '20px', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', textAlign: 'center' }}>
+            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#2563eb' }}>
+              {stats.stats.unique_buyers}
+            </div>
+            <div style={{ color: '#64748b', marginTop: '5px' }}>Unique Buyers</div>
+          </div>
+          <div style={{ padding: '20px', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', textAlign: 'center' }}>
+            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#2563eb' }}>
+              {stats.stats.remaining_tickets}
+            </div>
+            <div style={{ color: '#64748b', marginTop: '5px' }}>Remaining Tickets</div>
+          </div>
+        </div>
+
+        <h3 style={{ fontSize: '20px', fontWeight: '600', marginTop: '32px', marginBottom: '16px', color: '#2563eb' }}>Recent Purchases</h3>
+        {stats.recent_orders.length === 0 ? (
+          <p style={{ color: '#64748b', fontStyle: 'italic' }}>No purchases yet</p>
+        ) : (
+          <div style={{ marginTop: '15px' }}>
+            {stats.recent_orders.map((order) => (
+              <div
+                key={order.id}
+                style={{
+                  padding: '15px',
+                  background: '#f9fafb',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                  marginBottom: '10px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div>
+                  <strong>{order.buyer_name}</strong>
+                  <div style={{ color: '#64748b', fontSize: '0.9em', marginTop: '5px' }}>
+                    {order.qty} ticket{order.qty > 1 ? 's' : ''} • {order.amount_nok} NOK
+                  </div>
+                </div>
+                <div style={{ color: '#64748b', fontSize: '0.9em' }}>
+                  {formatDateTime(order.created_at)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <h3 style={{ fontSize: '20px', fontWeight: '600', marginTop: '40px', marginBottom: '16px', color: '#2563eb' }}>Draw Control</h3>
+        {drawError && (
+          <div style={{ 
+            background: '#fee2e2', 
+            color: '#dc2626', 
+            padding: '12px 16px', 
+            borderRadius: '8px',
+            marginBottom: '16px',
+            fontSize: '14px'
+          }}>
+            {drawError}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', marginTop: '15px' }}>
+          <button 
+            onClick={handleDrawNext} 
+            disabled={drawing || stats.stats.remaining_tickets === 0}
+            className="blue-button"
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: '600',
+              color: '#ffffff',
+              background: (drawing || stats.stats.remaining_tickets === 0) ? '#93c5fd' : '#2563eb',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: (drawing || stats.stats.remaining_tickets === 0) ? 'not-allowed' : 'pointer',
+              opacity: (drawing || stats.stats.remaining_tickets === 0) ? 0.7 : 1,
+              transition: 'background 0.2s'
+            }}
+          >
+            {drawing
+              ? 'Drawing...'
+              : stats.stats.remaining_tickets === 0
+                ? 'All Tickets Drawn'
+                : 'Draw Next Ticket'}
+          </button>
+          <div style={{ color: '#64748b' }}>
+            Draws completed: {stats.stats.total_draws}
+          </div>
+        </div>
+
+        <h3 style={{ fontSize: '20px', fontWeight: '600', marginTop: '40px', marginBottom: '16px', color: '#2563eb' }}>Drawn Tickets</h3>
+        {stats.draws.length === 0 ? (
+          <p style={{ color: '#64748b', fontStyle: 'italic' }}>No tickets drawn yet</p>
+        ) : (
+          <div style={{ marginTop: '15px' }}>
+            {stats.draws.map((draw) => (
+              <div
+                key={draw.id}
+                style={{
+                  padding: '15px',
+                  background: '#f9fafb',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                  marginBottom: '10px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div>
+                  <strong>Ticket #{draw.winning_ticket_number}</strong>
+                  <div style={{ color: '#64748b', fontSize: '0.9em', marginTop: '5px' }}>
+                    Method: {draw.method}
+                  </div>
+                  <div style={{ color: '#64748b', fontSize: '0.9em', marginTop: '5px' }}>
+                    Winner: {draw.winner_name || 'Anonymous'}
+                  </div>
+                </div>
+                <div style={{ color: '#64748b', fontSize: '0.9em' }}>
+                  {formatDateTime(draw.drawn_at)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ marginTop: '32px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+          <p style={{ margin: 0 }}>
+            <a href="/" style={{ color: '#2563eb', textDecoration: 'none' }}>← Back to home</a>
+          </p>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

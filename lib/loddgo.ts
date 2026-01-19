@@ -14,6 +14,7 @@ export interface Event {
   price_nok: number;
   status: 'draft' | 'live' | 'closed' | 'drawn';
   draw_at: string | null;
+  organizer_id: string | null;
   created_at: string;
 }
 
@@ -26,6 +27,8 @@ export interface Order {
   paid: boolean;
   payment_provider: string;
   idempotency_key: string | null;
+  user_id: string | null;
+  identity_id: string | null;
   created_at: string;
 }
 
@@ -55,6 +58,7 @@ export async function createEvent(data: {
   price_nok: number;
   status?: Event['status'];
   draw_at?: string | null;
+  organizer_id?: string | null;
 }): Promise<Event> {
   const { data: event, error } = await supabaseServer
     .from('events')
@@ -64,6 +68,7 @@ export async function createEvent(data: {
       price_nok: data.price_nok,
       status: data.status ?? 'live',
       draw_at: data.draw_at ?? null,
+      organizer_id: data.organizer_id ?? null,
     })
     .select()
     .single();
@@ -108,6 +113,8 @@ export async function buyTicketsTransactionally(data: {
   paid: boolean;
   payment_provider?: string;
   idempotency_key?: string | null;
+  user_id?: string | null;
+  identity_id?: string | null;
 }): Promise<{ order: Order; tickets: Ticket[] }> {
   // Check idempotency if key provided
   if (data.idempotency_key) {
@@ -179,6 +186,8 @@ export async function buyTicketsTransactionally(data: {
       paid: data.paid,
       payment_provider: data.payment_provider ?? 'mock',
       idempotency_key: data.idempotency_key ?? null,
+      user_id: data.user_id ?? null,
+      identity_id: data.identity_id ?? null,
     })
     .select()
     .single();
