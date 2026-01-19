@@ -226,7 +226,11 @@ export default function ControlPanel() {
       {drawError && <div className="error">{drawError}</div>}
       <div style={{ display: 'flex', gap: '15px', alignItems: 'center', marginTop: '15px' }}>
         <button onClick={handleDrawNext} disabled={drawing || stats.stats.remaining_tickets === 0}>
-          {drawing ? 'Drawing...' : 'Draw Next Winner'}
+          {drawing
+            ? 'Drawing...'
+            : stats.stats.remaining_tickets === 0
+              ? 'All Tickets Drawn'
+              : 'Draw Next Ticket'}
         </button>
         <div style={{ color: '#64748b' }}>
           Draws completed: {stats.stats.total_draws}

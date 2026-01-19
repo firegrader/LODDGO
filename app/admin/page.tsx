@@ -5,7 +5,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(false);
@@ -18,6 +19,37 @@ export default function AdminPage() {
     status: 'live' as 'draft' | 'live' | 'closed' | 'drawn',
   });
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+  const [eventLink, setEventLink] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const buildQr = async () => {
+      if (!generatedCode) {
+        setEventLink(null);
+        setQrDataUrl(null);
+        return;
+      }
+      const origin = window.location.origin;
+      const link = `${origin}/e/${generatedCode}`;
+      setEventLink(link);
+      try {
+        const dataUrl = await QRCode.toDataURL(link, {
+          width: 220,
+          margin: 1,
+          color: {
+            dark: '#111827',
+            light: '#ffffff',
+          },
+        });
+        setQrDataUrl(dataUrl);
+      } catch (err) {
+        console.error('Failed to generate QR code:', err);
+        setQrDataUrl(null);
+      }
+    };
+
+    buildQr();
+  }, [generatedCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,8 +137,19 @@ export default function AdminPage() {
         <div style={{ marginTop: '30px', padding: '15px', background: '#dcfce7', borderRadius: '4px', border: '1px solid #16a34a' }}>
           <h3>Event Created!</h3>
           <p><strong>Event Code:</strong> <span className="code">{generatedCode}</span></p>
-          <p>Share this link with participants:</p>
-          <p><span className="code">/e/{generatedCode}</span></p>
+          <p>Event link:</p>
+          <p><span className="code">{eventLink || `/e/${generatedCode}`}</span></p>
+          {qrDataUrl && (
+            <div style={{ marginTop: '15px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <img src={qrDataUrl} alt="Event QR code" width={220} height={220} />
+              <div style={{ color: '#065f46' }}>
+                <div><strong>Scan to join</strong></div>
+                <div style={{ fontSize: '0.9em', marginTop: '6px' }}>
+                  Works locally and on Vercel
+                </div>
+              </div>
+            </div>
+          )}
           <div style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <a href={`/e/${generatedCode}`} style={{ padding: '8px 16px', background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: '4px' }}>
               View Event Page →

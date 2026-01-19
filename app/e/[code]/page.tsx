@@ -138,22 +138,38 @@ export default function BuyPage() {
           placeholder="Enter your name"
         />
 
-        <label htmlFor="qty">Number of Tickets:</label>
-        <select
-          id="qty"
-          value={qty}
-          onChange={(e) => setQty(Number(e.target.value))}
-        >
-          {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
-            <option key={num} value={num}>{num}</option>
-          ))}
-        </select>
-
-        <p><strong>Total: {total} NOK</strong></p>
-
-        <button type="submit" disabled={buying}>
-          {buying ? 'Processing...' : 'Buy Tickets'}
-        </button>
+        <label>Number of Tickets:</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            type="button"
+            onClick={() => setQty((q) => Math.max(1, q - 1))}
+            aria-label="Decrease quantity"
+            style={{ width: '36px', height: '36px' }}
+          >
+            -
+          </button>
+          <input
+            type="number"
+            min="1"
+            value={qty}
+            onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
+            style={{ width: '60px', textAlign: 'center', height: '36px' }}
+          />
+          <button
+            type="button"
+            onClick={() => setQty((q) => q + 1)}
+            aria-label="Increase quantity"
+            style={{ width: '36px', height: '36px' }}
+          >
+            +
+          </button>
+          <div style={{ marginLeft: 'auto', marginRight: '10px' }}>
+            Total: <strong>{total} NOK</strong>
+          </div>
+          <button type="submit" disabled={buying} style={{ width: '90px', height: '36px' }}>
+            {buying ? '...' : 'Buy'}
+          </button>
+        </div>
       </form>
 
       <p style={{ marginTop: '20px' }}>
